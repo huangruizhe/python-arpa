@@ -5,6 +5,9 @@ from io import StringIO
 from .models.simple import ARPAModelSimple
 from .parsers.quick import ARPAParserQuick
 
+from .models.vectorized import ARPAModelVectorized
+from .parsers.vectorized import ARPAParserVectorized
+
 
 def dump(obj, fp):
     """Serialize obj to fp (a file-like object) in ARPA format."""
@@ -36,13 +39,15 @@ def load(fp, model=None, parser=None):
     if not parser:
         parser = 'quick'
 
-    if model not in ['simple']:
+    if model not in ['simple', 'vectorized']:
         raise ValueError
-    if parser not in ['quick']:
+    if parser not in ['quick', 'vectorized']:
         raise ValueError
 
     if model == 'simple' and parser == 'quick':
         return ARPAParserQuick(ARPAModelSimple).parse(fp)
+    elif model == 'vectorized' and parser == 'vectorized':
+        return ARPAParserVectorized(ARPAModelVectorized).parse(fp)
     else:
         raise ValueError
 
