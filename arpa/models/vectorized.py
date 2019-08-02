@@ -95,26 +95,28 @@ class ARPAModelVectorized(ARPAModel):
             # ngram: (w1, w2, w3)
             # h:     (w1, w3)
             # s:     (w2, w3)
-            if ngt_lower is None:
-                return
-            assert self.order > 1
 
             hidx = np.empty(self.count + 2, dtype=np.uint32)  # two dummy rows
             sidx = np.empty(self.count + 2, dtype=np.uint32)
 
-            idx = ngt_lower.idx
-            for ngram, rowid in self.idx.items():  # for all ngrams in this ngt
-                h = ngram[:-1]  # history
-                s = ngram[1:]  # suffix
+            if ngt_lower is None:
+                hidx.fill(0)
+                sidx.fill(0)
+            else:
+                idx = ngt_lower.idx
+                for ngram, rowid in self.idx.items():  # for all ngrams in this ngt
+                    h = ngram[:-1]  # history
+                    s = ngram[1:]  # suffix
 
-                # Assumption: if this ngram hw is seen, then its history h
-                # and its suffix h'w are all seen.
-                hidx[rowid] = idx[h]
-                sidx[rowid] = idx[s]
+                    # Assumption: if this ngram hw is seen, then its history h
+                    # and its suffix h'w are all seen.
+                    hidx[rowid] = idx[h]
+                    sidx[rowid] = idx[s]
 
-            # two dummy rows
-            hidx[-2] = sidx[-2] = len(idx)
-            hidx[-1] = sidx[-1] = len(idx) + 1
+                # two dummy rows
+                hidx[-2] = sidx[-2] = len(idx)
+                hidx[-1] = sidx[-1] = len(idx) + 1
+
             self.tb["hidx"] = hidx
             self.tb["sidx"] = sidx
             self.hidx = hidx
@@ -321,6 +323,14 @@ class ARPAModelVectorized(ARPAModel):
     def cols(self, order):
         return {i: self.col(order, i) for i in range(order)}
 
+    def ngrams(self, order):
+        return self._ngts[order].ngrams()
+
+    def index_of(self, ngram):
+        if isinstance(ngram[0], str):
+            ngram = self._vocab.integerize(ngram)
+        return self._ngts[len(ngram)].idx[ngram]
+
     def set_log_ph(self, log_ph):
         self.log_ph = log_ph
 
@@ -329,6 +339,9 @@ class ARPAModelVectorized(ARPAModel):
 
     def is_seen_ngram(self, hw):
         return hw in self._ngts[len(hw)]
+
+    def ngt(self, order):
+        return self._ngts[order]
 
 
 class Vocabulary:
@@ -416,3 +429,16 @@ class Vocabulary:
 # pip3 uninstall arpa
 # pip3 install --user -e /Users/huangruizhe/Downloads/PycharmProjects/python-arpa
 # pip3 install --user arpa --upgrade -e /Users/huangruizhe/Downloads/PycharmProjects/python-arpa
+
+# N = 20000000
+# r = 400
+# df = pd.DataFrame({
+#     'A':np.random.randint(1, r, size=N),
+#     'B':np.random.randint(1, r, size=N),
+#     'C':np.random.randint(1, r, size=N),
+#     'nume2':np.random.normal(0,1,N)})
+# t3 = time.time() ;\
+# a = df.groupby(by=['A','B'], sort=False, as_index=False).agg({"nume2": log10_sum_exp_array}) ;\
+# t4 = time.time() ;\
+# print(t4-t3, "seconds")
+#
