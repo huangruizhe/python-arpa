@@ -19,8 +19,10 @@ class ARPAModelVectorized(ARPAModel):
         # pd.DataFrame(data=tb.tb)
 
         def __init__(self, order, count):
-            self.count = count
+            self.count = count  # real count, not including the dummy rows
             self.order = order
+
+            # TODO: knowing "count", we can initialize the elements in ngt as fixed-sized vector instead of lists
 
             # the following data structures must have the same sizes
             self.tb = dict({i: [] for i in range(order)})
@@ -147,6 +149,7 @@ class ARPAModelVectorized(ARPAModel):
                     ret += "%.6f\t%s\t%.6f\n" % (p, str(ngram), bow)
             return ret
 
+    # for some technical reasons, we have to make it static
     _vocab = None
 
     def __init__(self, unk=UNK):
@@ -205,16 +208,11 @@ class ARPAModelVectorized(ARPAModel):
             ngram_id = self._vocab.integerize(ngram)
         return self._ngts[len(ngram)].entry(ngram_id)
 
-    # def integerize(self, ngram, populate=False):
-    #     if type(ngram[0]) != int:
-    #         if populate:
-    #             ngram = tuple(self._get_wid_and_populate(w) for w in ngram)
-    #         else:
-    #             ngram = tuple(self.w_id[w] for w in ngram)
-    #     return ngram
-    #
-    # def deintegerize(self, ngram):
-    #     return tuple(self.id_w[wid] for wid in ngram)
+    def integerize(self, ngram):
+        return self._vocab.integerize(ngram)
+
+    def deintegerize(self, ngram):
+        return self._vocab.deintegerize(ngram)
 
     def _log_bo(self, ngram):
         if not isinstance(ngram[0], int):
@@ -243,7 +241,11 @@ class ARPAModelVectorized(ARPAModel):
         if row_id is not None:
             return self._ngts[order].logp[row_id]
         else:
-            log_bo = self._ngts[order].logbow.get(ngram[:-1], 0)
+            bo_id = self._ngts[order - 1].idx.get(ngram[:-1], None)
+            if bo_id is None:  # there is no recursion for bow
+                log_bo = 0
+            else:
+                log_bo = self._ngts[order - 1].logbow[bo_id]
             return float(log_bo) + self.log_p_raw(ngram[1:])
 
     # def get_backoff_ps(self, s):
@@ -340,7 +342,7 @@ class ARPAModelVectorized(ARPAModel):
     def is_seen_ngram(self, hw):
         return hw in self._ngts[len(hw)]
 
-    def ngt(self, order):
+    def get_ngt(self, order):
         return self._ngts[order]
 
 
@@ -409,6 +411,11 @@ class Vocabulary:
         return tuple(self.id_w[wid] for wid in ngram)
 
 
+# TODO: A more efficient way to implement this data structure may
+# be to just store which group this ngram belong to.
+# Pros: preprocessing to the most
+# Cons: hard to debug, may lose the exact ngram information
+
 
 
 # Test the performance of pandas dataframe constructor: pd.DataFrame(data=a)
@@ -442,3 +449,5 @@ class Vocabulary:
 # t4 = time.time() ;\
 # print(t4-t3, "seconds")
 #
+
+
