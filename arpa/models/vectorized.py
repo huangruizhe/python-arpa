@@ -152,6 +152,11 @@ class ARPAModelVectorized(ARPAModel):
     # for some technical reasons, we have to make it static
     _vocab = None
 
+    FLOAT_NDIGITS = 7
+
+    def num_round(self, num, ndigits=FLOAT_NDIGITS):
+        return round(num, ndigits)
+
     def __init__(self, unk=UNK):
         super().__init__(unk=unk)
         self._counts = OrderedDict()
@@ -199,14 +204,33 @@ class ARPAModelVectorized(ARPAModel):
     def vocabulary(self, sort=True):
         return self._vocab
 
-    def _entries(self, order):
-        return (self._entry(k) for k in self._ngts[order].ngrams())
+    def _entries(self, order, deintegerize=True, round=True):
+        return (self._entry(k, deintegerize) for k in self._ngts[order].ngrams())
 
-    def _entry(self, ngram):
+    def _entry(self, ngram, deintegerize=True, round=True):
         ngram_id = ngram
         if not isinstance(ngram_id[0], int):
             ngram_id = self._vocab.integerize(ngram)
-        return self._ngts[len(ngram)].entry(ngram_id)
+        e = self._ngts[len(ngram)].entry(ngram_id)
+
+        if deintegerize:
+            ngram = self._vocab.deintegerize(e[1])
+        else:
+            ngram = e[1]
+
+        if round:
+            logp = self.num_round(e[0])
+            if np.isinf(logp):
+                logp = -99
+            if len(e) == 3:
+                logbow = e[2]
+                if np.isnan(logbow) or abs(logbow - 0) < 1e-5:  # no need to keep bow in the arpa
+                    return logp, ngram
+                else:
+                    logbow = self.num_round(e[2])
+                    return logp, ngram, logbow
+            else:
+                return logp, ngram
 
     def integerize(self, ngram):
         return self._vocab.integerize(ngram)
