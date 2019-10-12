@@ -204,33 +204,34 @@ class ARPAModelVectorized(ARPAModel):
     def vocabulary(self, sort=True):
         return self._vocab
 
-    def _entries(self, order, deintegerize=True, round=True):
-        return (self._entry(k, deintegerize) for k in self._ngts[order].ngrams())
+    def _entries(self, order, deintegerize=True, rounded=True):
+        return (self._entry(k, deintegerize, rounded) for k in self._ngts[order].ngrams())
 
-    def _entry(self, ngram, deintegerize=True, round=True):
+    def _entry(self, ngram, deintegerize=True, rounded=True):
         ngram_id = ngram
         if not isinstance(ngram_id[0], int):
             ngram_id = self._vocab.integerize(ngram)
         e = self._ngts[len(ngram)].entry(ngram_id)
 
-        if deintegerize:
-            ngram = self._vocab.deintegerize(e[1])
-        else:
-            ngram = e[1]
+        e = list(e)
 
-        if round:
-            logp = self.num_round(e[0])
-            if np.isinf(logp):
-                logp = -99
+        if deintegerize:
+            e[1] = self._vocab.deintegerize(e[1])
+
+        if rounded:
+            if np.isinf(e[0]):
+                e[0] = -99
+            else:
+                e[0] = self.num_round(e[0])
+
             if len(e) == 3:
                 logbow = e[2]
                 if np.isnan(logbow) or abs(logbow - 0) < 1e-5:  # no need to keep bow in the arpa
-                    return logp, ngram
+                    e = e[:-1]
                 else:
-                    logbow = self.num_round(e[2])
-                    return logp, ngram, logbow
-            else:
-                return logp, ngram
+                    e[2] = self.num_round(logbow)
+
+        return tuple(e)
 
     def integerize(self, ngram):
         return self._vocab.integerize(ngram)
