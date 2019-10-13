@@ -2,6 +2,7 @@ from collections import OrderedDict
 from collections import defaultdict
 import math
 import numpy as np
+import pickle
 
 from .base import ARPAModel
 from .base import UNK, SOS, EOS
@@ -204,10 +205,10 @@ class ARPAModelVectorized(ARPAModel):
     def vocabulary(self, sort=True):
         return self._vocab
 
-    def _entries(self, order, deintegerize=True, rounded=True):
-        return (self._entry(k, deintegerize, rounded) for k in self._ngts[order].ngrams())
+    def _entries(self, order, deintegerized=True, rounded=True):
+        return (self._entry(k, deintegerized, rounded) for k in self._ngts[order].ngrams())
 
-    def _entry(self, ngram, deintegerize=True, rounded=True):
+    def _entry(self, ngram, deintegerized=True, rounded=True):
         ngram_id = ngram
         if not isinstance(ngram_id[0], int):
             ngram_id = self._vocab.integerize(ngram)
@@ -215,7 +216,7 @@ class ARPAModelVectorized(ARPAModel):
 
         e = list(e)
 
-        if deintegerize:
+        if deintegerized:
             e[1] = self._vocab.deintegerize(e[1])
 
         if rounded:
@@ -389,6 +390,11 @@ class ARPAModelVectorized(ARPAModel):
 
     def get_ngt(self, order):
         return self._ngts[order]
+
+    def dump_pkl(self, fname):
+        assert fname.endswith('.pkl')
+        with open(fname, 'wb') as handle:
+            pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 class Vocabulary:

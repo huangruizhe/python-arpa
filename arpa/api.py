@@ -1,4 +1,5 @@
 import gzip
+import pickle
 
 from io import StringIO
 
@@ -55,7 +56,10 @@ def load(fp, model=None, parser=None):
 def loadf(path, encoding=None, model=None, parser=None):
     """Deserialize path (.arpa, .gz) to a Python object."""
     path = str(path)
-    if path.endswith('.gz'):
+    if path.endswith('.pkl'):
+        with open(path, 'rb') as handle:
+            return [pickle.load(handle)]
+    elif path.endswith('.gz'):
         with gzip.open(path, mode='rt', encoding=encoding) as f:
             return load(f, model=model, parser=parser)
     else:
