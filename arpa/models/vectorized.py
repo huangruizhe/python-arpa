@@ -470,6 +470,11 @@ class Vocabulary:
     def deintegerize(self, ngram):
         return tuple(self.id_w[wid] for wid in ngram)
 
+    def check_type(self):
+        for w, id in self.w_id.items():
+            assert isinstance(w, str)
+            assert isinstance(id, int)
+
 
 # TODO: A more efficient way to implement this data structure may
 # be to just store which group this ngram belong to.
