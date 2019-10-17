@@ -227,7 +227,8 @@ class ARPAModelVectorized(ARPAModel):
 
             if len(e) == 3:
                 logbow = e[2]
-                if np.isnan(logbow) or abs(logbow - 0) < 1e-7:  # no need to keep bow in the arpa
+                # if np.isnan(logbow) or abs(logbow - 0) < 1e-7:  # no need to keep bow in the arpa
+                if np.isnan(logbow) or logbow == 0.0:
                     e = e[:-1]
                 else:
                     e[2] = self.num_round(logbow)
