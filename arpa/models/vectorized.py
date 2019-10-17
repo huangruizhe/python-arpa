@@ -206,7 +206,28 @@ class ARPAModelVectorized(ARPAModel):
         return self._vocab
 
     def _entries(self, order, deintegerized=True, rounded=True):
-        return (self._entry(k, deintegerized, rounded) for k in self._ngts[order].ngrams())
+        # return (self._entry(k, deintegerized, rounded) for k in self._ngts[order].ngrams())
+
+        ngt = self._ngts[order]
+        for ngram, row_id in ngt.idx.items():
+            ngram_w = ngram
+            if deintegerized:
+                ngram_w = self._vocab.deintegerize(ngram)
+            logp = ngt.logp[row_id]
+            logbow = ngt.logbow[row_id]
+
+            if rounded:
+                if np.isinf(logp):
+                    logp = -99
+                else:
+                    logp = self.num_round(logp)
+
+                if np.isnan(logbow) == math.nan or logbow == 0.0:  # abs(logbow - 0) < 1e-7
+                    yield logp, ngram_w
+                else:
+                    yield logp, ngram_w, logbow
+            else:
+                yield logp, ngram_w, logbow
 
     def _entry(self, ngram, deintegerized=True, rounded=True):
         ngram_id = ngram
