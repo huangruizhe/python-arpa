@@ -222,7 +222,7 @@ class ARPAModelVectorized(ARPAModel):
                 else:
                     logp = self.num_round(logp)
 
-                if np.isnan(logbow) == math.nan or logbow == 0.0:  # abs(logbow - 0) < 1e-7
+                if np.isnan(logbow) or logbow == 0.0:  # abs(logbow - 0) < 1e-7
                     yield logp, ngram_w
                 else:
                     yield logp, ngram_w, logbow
