@@ -418,6 +418,50 @@ class ARPAModelVectorized(ARPAModel):
         with open(fname, 'wb') as handle:
             pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+    # compute ppl
+
+    # def log_p_raw_print(self, ngram):
+    #     if not isinstance(ngram[0], int):
+    #         ngram = self._vocab.integerize(ngram)
+    #     order = len(ngram)
+    #     row_id = self._ngts[order].idx.get(ngram, None)
+    #     if row_id is not None:
+    #         return ngram, self._ngts[order].logp[row_id]
+    #     else:
+    #         bo_id = self._ngts[order - 1].idx.get(ngram[:-1], None)
+    #         if bo_id is None:  # there is no recursion for bow
+    #             log_bo = 0
+    #         else:
+    #             log_bo = self._ngts[order - 1].logbow[bo_id]
+    #         ng, lp = self.log_p_raw_print(ngram[1:])
+    #         return ng, float(log_bo) + lp
+
+    def set_order(self):
+        self.n = self.order()
+
+    def _replace_unks(self, words):
+        return tuple((w if w in self._vocab else self._unk) for w in words)
+
+    def log_s(self, sentence, sos=SOS, eos=EOS):
+        words = self._check_input(sentence)
+        if self._unk:
+            words = self._replace_unks(words)
+
+        n_words = len(words)
+
+        start = 1
+        if sos:
+            words = (sos, ) + words
+            start = 2
+        if eos:
+            words = words + (eos, )
+
+        result = 0
+        for i in range(start, len(words) + 1):
+            result += self.log_p_raw(words[max(0, i-self.n): i])
+
+        return result, n_words
+
 
 class Vocabulary:
 
