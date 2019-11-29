@@ -448,6 +448,7 @@ class ARPAModelVectorized(ARPAModel):
             words = self._replace_unks(words)
 
         n_words = len(words)
+        details = list()
 
         start = 1
         if sos:
@@ -458,9 +459,14 @@ class ARPAModelVectorized(ARPAModel):
 
         result = 0
         for i in range(start, len(words) + 1):
-            result += self.log_p_raw(words[max(0, i-self.n): i])
+            ngram = words[max(0, i-self.n): i]
+            log_p = self.log_p_raw(ngram)
 
-        return result, n_words
+            details.append((ngram, log_p))
+
+            result += log_p
+
+        return result, n_words, details
 
 
 class Vocabulary:
