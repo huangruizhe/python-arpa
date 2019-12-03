@@ -301,6 +301,8 @@ class ARPAModelVectorized(ARPAModel):
                 log_bo = self._ngts[order - 1].logbow[bo_id]
             return float(log_bo) + self.log_p_raw(ngram[1:])
 
+    # If I remember correctly, this is used only for lm_adapt, because it needs to save
+    # the current lm_adapt as well as the lm_out
     def log_p_raw0(self, ngram):
         if not isinstance(ngram[0], int):
             ngram = self._vocab.integerize(ngram)
@@ -420,6 +422,23 @@ class ARPAModelVectorized(ARPAModel):
 
     # compute ppl
 
+    def log_p_raw_print(self, ngram):
+        if not isinstance(ngram[0], int):
+            ngram = self._vocab.integerize(ngram)
+        order = len(ngram)
+        row_id = self._ngts[order].idx.get(ngram, None)
+        if row_id is not None:
+            return order, self._ngts[order].logp[row_id]
+        else:
+            bo_id = self._ngts[order - 1].idx.get(ngram[:-1], None)
+            if bo_id is None:  # there is no recursion for bow
+                log_bo = 0
+            else:
+                log_bo = self._ngts[order - 1].logbow[bo_id]
+            n, lp = self.log_p_raw(ngram[1:])
+            return n, float(log_bo) + lp
+
+
     # def log_p_raw_print(self, ngram):
     #     if not isinstance(ngram[0], int):
     #         ngram = self._vocab.integerize(ngram)
@@ -460,9 +479,9 @@ class ARPAModelVectorized(ARPAModel):
         result = 0
         for i in range(start, len(words) + 1):
             ngram = words[max(0, i-self.n): i]
-            log_p = self.log_p_raw(ngram)
+            n, log_p = self.log_p_raw_print(ngram)
 
-            details.append((ngram, log_p))
+            details.append((ngram[-n:], log_p))
 
             result += log_p
 
