@@ -435,7 +435,7 @@ class ARPAModelVectorized(ARPAModel):
                 log_bo = 0
             else:
                 log_bo = self._ngts[order - 1].logbow[bo_id]
-            n, lp = self.log_p_raw(ngram[1:])
+            n, lp = self.log_p_raw_print(ngram[1:])
             return n, float(log_bo) + lp
 
 
