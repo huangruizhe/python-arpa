@@ -518,7 +518,7 @@ class Vocabulary:
         # -write-vocab
         # or
         # -write-vocab-index
-        with open(path, 'r') as fp:
+        with open(path, 'r', encoding="latin-1") as fp:
             first_line = self.peek_line(fp).split(" ")
             if len(first_line) == 2:
                 for line in fp:
