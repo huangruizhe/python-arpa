@@ -591,7 +591,7 @@ class Vocabulary:
 
 # pip3 uninstall arpa
 # pip3 install --user -e /Users/huangruizhe/Downloads/PycharmProjects/python-arpa
-# pip3 install --user arpa --upgrade -e /Users/huangruizhe/Downloads/PycharmProjects/python-arpa
+# pip3 install --user --upgrade -e /Users/huangruizhe/Downloads/PycharmProjects/python-arpa
 
 # N = 20000000
 # r = 400
