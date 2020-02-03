@@ -4,6 +4,8 @@ import re
 from .base import ARPAParser
 from ..exceptions import ParseException
 
+from datetime import datetime
+
 
 class ARPAParserQuick(ARPAParser):
     @unique
@@ -28,8 +30,16 @@ class ARPAParserQuick(ARPAParser):
         self._state = self.State.DATA
         self._tmp_model = None
         self._tmp_order = None
+        progress_count = 0
         for line in fp:
             line = line.strip()
+
+            progress_count += 1
+            if progress_count % 1000000 == 0:
+                now = datetime.now()
+                current_time = now.strftime("%H:%M:%S")
+                print("[%s] loading arpa file (quick): %d lines" % (current_time, progress_count))
+
             if self._state == self.State.DATA:
                 self._data(line)
             elif self._state == self.State.COUNT:
