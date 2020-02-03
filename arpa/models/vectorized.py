@@ -527,7 +527,7 @@ class Vocabulary:
                         continue
                     ll = line.split(" ")
                     wid = int(ll[0])
-                    w = ll[1]
+                    w = ll[1].lower()
                     self.w_id[w] = wid
                     self.id_w[wid] = w
             else:
@@ -535,7 +535,7 @@ class Vocabulary:
                     line = line.strip()
                     if len(line) < 1:
                         continue
-                    w = line
+                    w = line.lower()
                     if w in self.w_id:
                         continue
                     new_id = len(self.w_id)
