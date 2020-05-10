@@ -113,6 +113,9 @@ class ARPAModelVectorized(ARPAModel):
 
                     # Assumption: if this ngram hw is seen, then its history h
                     # and its suffix h'w are all seen.
+                    # [Update] May 9 2020: this does not hold for pruned lm!!
+                    # The history h must exist, to keep track of the backoff weights
+                    # The suffix s might not exists, in this case, it
                     hidx[rowid] = idx[h]
                     sidx[rowid] = idx[s]
 
@@ -168,7 +171,8 @@ class ARPAModelVectorized(ARPAModel):
     def __contains__(self, ngram):
         if isinstance(ngram[0], str):
             ngram = self._vocab.integerize(ngram)
-        return ngram in self._ngts[len(ngram)]
+        l = len(ngram)
+        return l in self._ngts and ngram in self._ngts[l]
 
     @classmethod
     def set_vocab(self, vocab):

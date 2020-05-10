@@ -76,6 +76,10 @@ class ARPAModel(metaclass=ABCMeta):
         pass
 
     def write(self, fp):
+        def float_precision(f, n):  # print at most n decimal points
+            # https://stackoverflow.com/questions/14997799/most-pythonic-way-to-print-at-most-some-number-of-decimal-places
+            return format(f, '.%df' % n).rstrip('0').rstrip('.')
+
         fp.write('\n\\data\\\n')
         for order, count in self.counts():
             fp.write('ngram {}={}\n'.format(order, count))
@@ -86,10 +90,10 @@ class ARPAModel(metaclass=ABCMeta):
                 prob = e[0]
                 ngram = ' '.join(e[1])
                 if len(e) == 2:
-                    fp.write('{}\t{}\n'.format(prob, ngram))
+                    fp.write('{}\t{}\n'.format(float_precision(prob), ngram))
                 elif len(e) == 3:
                     backoff = e[2]
-                    fp.write('{}\t{}\t{}\n'.format(prob, ngram, backoff))
+                    fp.write('{}\t{}\t{}\n'.format(float_precision(prob), ngram, float_precision(backoff)))
                 else:
                     raise ValueError
             fp.write('\n')
