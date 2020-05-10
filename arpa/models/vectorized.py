@@ -106,7 +106,7 @@ class ARPAModelVectorized(ARPAModel):
                 hidx.fill(0)
                 sidx.fill(0)
             else:
-                idx = ngt_lower.idx
+                lower_idx = ngt_lower.idx
                 for ngram, rowid in self.idx.items():  # for all ngrams in this ngt
                     h = ngram[:-1]  # history
                     s = ngram[1:]  # suffix
@@ -116,12 +116,21 @@ class ARPAModelVectorized(ARPAModel):
                     # [Update] May 9 2020: this does not hold for pruned lm!!
                     # The history h must exist, to keep track of the backoff weights
                     # The suffix s might not exists, in this case, it
-                    hidx[rowid] = idx[h]
-                    sidx[rowid] = idx[s]
+                    # [Solution] May 10 2020: when s does not exists, p(s) = 0,
+                    # which means we do not need corrections.
+                    # We may do the sanity check to see if the algorithm returns the
+                    # same results as the naive algorithm
+                    hidx[rowid] = lower_idx[h]
+                    sidx[rowid] = lower_idx.get(s, -1)  # refer to the last row, which is row-length independent
+
+                    # if s in lower_idx:
+                    #     sidx[rowid] = lower_idx[s]
+                    # else:
+                    #     sidx[rowid] = -1  # refer to the last row, which is row-length independent
 
                 # two dummy rows
-                hidx[-2] = sidx[-2] = len(idx)
-                hidx[-1] = sidx[-1] = len(idx) + 1
+                hidx[-2] = sidx[-2] = -2
+                hidx[-1] = sidx[-1] = -1
 
             self.tb["hidx"] = hidx
             self.tb["sidx"] = sidx
