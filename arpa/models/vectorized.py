@@ -603,6 +603,10 @@ class Vocabulary:
 # pip3 install --user -e /Users/huangruizhe/Downloads/PycharmProjects/python-arpa
 # pip3 install --user --upgrade -e /Users/huangruizhe/Downloads/PycharmProjects/python-arpa
 
+# https://stackoverflow.com/a/41537134/4563935
+# pip3 install --user -e /export/fs04/a12/rhuang/lmadapt/scripts/20191011/python-arpa
+
+
 # N = 20000000
 # r = 400
 # df = pd.DataFrame({
