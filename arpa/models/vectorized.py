@@ -99,8 +99,8 @@ class ARPAModelVectorized(ARPAModel):
             # h:     (w1, w3)
             # s:     (w2, w3)
 
-            hidx = np.empty(self.count + 2, dtype=np.uint32)  # two dummy rows
-            sidx = np.empty(self.count + 2, dtype=np.uint32)
+            hidx = np.empty(self.count + 2, dtype=np.int32)  # two dummy rows
+            sidx = np.empty(self.count + 2, dtype=np.int32)
 
             if ngt_lower is None:
                 hidx.fill(0)
@@ -349,7 +349,7 @@ class ARPAModelVectorized(ARPAModel):
         # turn lists into np arrays
         for ngt_order, ngt in self._ngts.items():  # for each ngram table
             for i in range(ngt_order):
-                ngt.tb[i] = np.asarray(ngt.tb[i], dtype=np.uint32)
+                ngt.tb[i] = np.asarray(ngt.tb[i], dtype=np.int32)
                 if i == ngt_order - 1:
                     ngt.w = ngt.tb[i]
 
@@ -613,8 +613,8 @@ class Vocabulary:
 # pip3 install --user --upgrade -e /Users/huangruizhe/Downloads/PycharmProjects/python-arpa
 
 # https://stackoverflow.com/a/41537134/4563935
-# pip3 install --user -e /export/fs04/a12/rhuang/lmadapt/scripts/20191011/python-arpa
-
+# pip3 install --user /export/fs04/a12/rhuang/lmadapt/scripts/20191011/python-arpa
+# pip3 install --user --upgrade /export/fs04/a12/rhuang/lmadapt/scripts/20191011/python-arpa
 
 # N = 20000000
 # r = 400
