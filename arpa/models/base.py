@@ -76,7 +76,7 @@ class ARPAModel(metaclass=ABCMeta):
         pass
 
     def write(self, fp):
-        def float_precision(f, n):  # print at most n decimal points
+        def float_precision(f, n=6):  # print at most n decimal points
             # https://stackoverflow.com/questions/14997799/most-pythonic-way-to-print-at-most-some-number-of-decimal-places
             return format(f, '.%df' % n).rstrip('0').rstrip('.')
 
