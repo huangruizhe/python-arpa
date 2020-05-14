@@ -44,6 +44,7 @@ class ARPAParserVectorized(ARPAParserQuick):
     def _count(self, line):
         match = self.re_count.match(line)
         if match:
+            logging.info(line)
             order = match.group(1)
             count = match.group(2)
             self._tmp_model.add_count(int(order), int(count))
