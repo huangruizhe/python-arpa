@@ -57,3 +57,18 @@ class ARPAModelSimple(ARPAModel):
 
     def _log_p(self, ngram):
         return self._ps[ngram]
+
+    def log_p_raw(self, ngram):
+        if ngram in self._ps:
+            return self._log_p(ngram)
+        else:
+            if len(ngram) == 1:
+                raise KeyError
+            else:
+                if ngram[:-1] in self._bos:
+                    log_bo = self._log_bo(ngram[:-1])
+                else:
+                    log_bo = 0
+                return log_bo + self.log_p_raw(ngram[1:])
+
+
