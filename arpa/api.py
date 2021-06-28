@@ -3,6 +3,7 @@ import gzip
 from io import StringIO
 
 from .models.simple import ARPAModelSimple
+from .models.context import ARPAModelContext
 from .parsers.quick import ARPAParserQuick
 
 
@@ -43,6 +44,8 @@ def load(fp, model=None, parser=None):
 
     if model == 'simple' and parser == 'quick':
         return ARPAParserQuick(ARPAModelSimple).parse(fp)
+    elif model == 'context' and parser == 'quick':
+        return ARPAParserQuick(ARPAModelContext).parse(fp)
     else:
         raise ValueError
 
