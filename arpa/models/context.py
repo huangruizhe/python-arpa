@@ -29,7 +29,7 @@ class ARPAModelContext(ARPAModel):
         super().__init__(unk=unk)
         self._counts = OrderedDict()
 
-        self._entries = OrderedDict()  # Use _entries[len(h)][h][w] for saving the entry of (h,w)
+        self._ngrams = OrderedDict()  # Use self._ngrams[len(h)][h][w] for saving the entry of (h,w)
         self._vocabulary = set()
 
     def contains_word(self, word):
@@ -39,11 +39,11 @@ class ARPAModelContext(ARPAModel):
     def __contains__(self, ngram):
         h = ngram[:-1]  # h is a tuple
         w = ngram[-1]   # w is a string/word
-        return h in self._entries[len(h)] and w in self._entries[len(h)][h]
+        return h in self._ngrams[len(h)] and w in self._ngrams[len(h)][h]
 
     def add_count(self, order, count):
         self._counts[order] = count
-        self._entries[order - 1] = defaultdict(lambda: defaultdict(Context))
+        self._ngrams[order - 1] = defaultdict(Context)
 
     def add_entry(self, ngram, p, bo=None, order=None):
         # Note: ngram is a tuple of strings, e.g. ("w1", "w2", "w3")
@@ -51,7 +51,7 @@ class ARPAModelContext(ARPAModel):
         w = ngram[-1]   # w is a string/word
 
         # Note that p and bo here are in fact in the log domain (self._base = 10)
-        h_context = self._entries[len(h)][h]
+        h_context = self._ngrams[len(h)][h]
         h_context[w] = p
         h_context.add_log_p(p, self._base)
         if bo is not None:
@@ -73,12 +73,12 @@ class ARPAModelContext(ARPAModel):
             return self._vocabulary
 
     def _entries(self, order):
-        return (self._entry(h, w) for h, wlist in self._entries[order - 1].items() for w in wlist)
+        return (self._entry(h, w) for h, wlist in self._ngrams[order - 1].items() for w in wlist)
 
     def _entry(self, h, w):
         # return the entry for the ngram (h, w)
         ngram = h + (w,)
-        log_p = self._entries[len(h)][h][w]
+        log_p = self._ngrams[len(h)][h][w]
         log_bo = self._log_bo(ngram)
         if log_bo is not None:
             return log_p, ngram, log_bo
@@ -86,16 +86,16 @@ class ARPAModelContext(ARPAModel):
             return log_p, ngram
 
     def _log_bo(self, ngram):
-        if ngram in self._entries[len(ngram)] and self._entries[len(ngram)].log_bo is not None:
-            return self._entries[len(ngram)].log_bo
+        if len(ngram) in self._ngrams and ngram in self._ngrams[len(ngram)]:
+            return self._ngrams[len(ngram)][ngram].log_bo
         else:
             return None
 
     def _log_p(self, ngram):
         h = ngram[:-1]  # h is a tuple
         w = ngram[-1]   # w is a string/word
-        if h in self._entries[len(h)] and w in self._entries[len(h)][h]:
-            return self._entries[len(h)][h][w]
+        if h in self._ngrams[len(h)] and w in self._ngrams[len(h)][h]:
+            return self._ngrams[len(h)][h][w]
         else:
             return None
 
