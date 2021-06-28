@@ -37,7 +37,7 @@ def load(fp, model=None, parser=None):
     if not parser:
         parser = 'quick'
 
-    if model not in ['simple']:
+    if model not in ['simple', 'context']:
         raise ValueError
     if parser not in ['quick']:
         raise ValueError
