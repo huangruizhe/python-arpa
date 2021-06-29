@@ -4,6 +4,8 @@ import math
 
 from .base import ARPAModel
 from .base import UNK
+from .base import SOS
+from .base import EOS
 
 
 class Context(dict):
@@ -15,11 +17,7 @@ class Context(dict):
     def __init__(self):
         super().__init__()
         self.log_bo = None
-        self.log_sum_p_seen = -math.inf
-
-    def add_log_p(self, log_p, base):
-        self.log_sum_p_seen = math.log(base ** log_p + base ** self.log_sum_p_seen, base)
-
+        # self.log_sum_p_seen = -math.inf
 
 class ARPAModelContext(ARPAModel):
     """
@@ -45,6 +43,12 @@ class ARPAModelContext(ARPAModel):
         self._counts[order] = count
         self._ngrams[order - 1] = defaultdict(Context)
 
+    def update_counts(self):
+        for order in range(1, self.order() + 1):
+            count = sum([len(wlist) for _, wlist in self._ngrams[order - 1].items()])
+            if count > 0:
+                self._counts[order] = count
+
     def add_entry(self, ngram, p, bo=None, order=None):
         # Note: ngram is a tuple of strings, e.g. ("w1", "w2", "w3")
         h = ngram[:-1]  # h is a tuple
@@ -53,9 +57,8 @@ class ARPAModelContext(ARPAModel):
         # Note that p and bo here are in fact in the log domain (self._base = 10)
         h_context = self._ngrams[len(h)][h]
         h_context[w] = p
-        h_context.add_log_p(p, self._base)
         if bo is not None:
-            h_context.log_bo = bo
+            self._ngrams[len(ngram)][ngram].log_bo = bo
 
         for word in ngram:
             self._vocabulary.add(word)
@@ -112,4 +115,28 @@ class ARPAModelContext(ARPAModel):
                     log_bo = 0
                 return log_bo + self.log_p_raw(ngram[1:])
 
+    def log_joint_prob(self, sequence):
+        # Compute the joint prob of the sequence based on the chain rule
+        # Note that sequence should be a tuple of strings
+        #
+        # Reference:
+        # https://github.com/BitSpeech/SRILM/blob/d571a4424fb0cf08b29fbfccfddd092ea969eae3/lm/src/LM.cc#L527
 
+        log_joint_p = 0
+        seq = sequence
+        while len(seq) > 0:
+            log_joint_p += self.log_p_raw(seq)
+            seq = seq[:-1]
+
+            # If we're computing the marginal probability of the unigram
+            # <s> context we have to look up </s> instead since the former
+            # has prob = 0.
+            if len(seq) == 1 and seq[0] == SOS:
+                seq = (EOS,)
+
+        return log_joint_p
+
+    def set_new_context(self, h):
+        old_context = self._ngrams[len(h)][h]
+        self._ngrams[len(h)][h] = Context()
+        return old_context
