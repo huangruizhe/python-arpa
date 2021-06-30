@@ -1,11 +1,12 @@
 from collections import OrderedDict
 from collections import defaultdict
-import math
 
 from .base import ARPAModel
 from .base import UNK
 from .base import SOS
 from .base import EOS
+
+FLOAT_NDIGITS = 7
 
 
 class Context(dict):
@@ -84,9 +85,9 @@ class ARPAModelContext(ARPAModel):
         log_p = self._ngrams[len(h)][h][w]
         log_bo = self._log_bo(ngram)
         if log_bo is not None:
-            return log_p, ngram, log_bo
+            return round(log_p, FLOAT_NDIGITS), ngram, round(log_bo, FLOAT_NDIGITS)
         else:
-            return log_p, ngram
+            return round(log_p, FLOAT_NDIGITS), ngram
 
     def _log_bo(self, ngram):
         if len(ngram) in self._ngrams and ngram in self._ngrams[len(ngram)]:
@@ -140,3 +141,4 @@ class ARPAModelContext(ARPAModel):
         old_context = self._ngrams[len(h)][h]
         self._ngrams[len(h)][h] = Context()
         return old_context
+
