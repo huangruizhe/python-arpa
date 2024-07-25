@@ -32,15 +32,15 @@ class ARPAModel(metaclass=ABCMeta):
         return self.log_p_raw(words)
 
     def log_p_raw(self, ngram):
-        try:
+        if self._log_p_check(ngram):
             return self._log_p(ngram)
-        except KeyError:
+        else:
             if len(ngram) == 1:
                 raise KeyError
             else:
-                try:
+                if self._log_bo_check(ngram[:-1]):
                     log_bo = self._log_bo(ngram[:-1])
-                except KeyError:
+                else:
                     log_bo = 0
                 return log_bo + self.log_p_raw(ngram[1:])
 
@@ -109,6 +109,14 @@ class ARPAModel(metaclass=ABCMeta):
 
     @abstractmethod
     def _log_p(self, ngram):  # pragma: no cover
+        pass
+
+    @abstractmethod
+    def _log_bo_check(self, ngram):  # pragma: no cover
+        pass
+
+    @abstractmethod
+    def _log_p_check(self, ngram):  # pragma: no cover
         pass
 
     @staticmethod

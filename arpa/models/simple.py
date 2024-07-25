@@ -57,3 +57,9 @@ class ARPAModelSimple(ARPAModel):
 
     def _log_p(self, ngram):
         return self._ps[ngram]
+
+    def _log_bo_check(self, ngram):
+        return ngram in self._bos
+
+    def _log_p_check(self, ngram):
+        return ngram in self._ps
